@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"http"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -41,6 +43,40 @@ func getProjectName() string {
 
 func initRepo(title string, org string, visibility string) {
 	fmt.Println("initRepo:", title, org, visibility)
+
+	if visibility == "private" {
+		payload := fmt.Sprintf("\"name\": \"Test\", \"private\": \"true\"")
+		fmt.Println(payload)
+    	// payload := '{"name": "' + title + '", "private": "true"}'
+	} else {
+		// payload := '{"name": "' + name + '", "private": "false"}'
+	}
+
+	fmt.Println("creating repository...")
+
+	API_URL := "https://api.github.com"
+	headers := {
+		"Authorization": "token " + token(),
+		"Accept": "application/vnd.github.v3+json",
+	}
+
+	if org == "" {
+		res, err := http.PostForm(API_URL + "/user/repos", data=payload, headers=headers)
+
+		if err != nil {
+			panic(err)
+		}
+
+		var res map[string]interface{}
+
+    json.NewDecoder(resp.Body).Decode(&res)
+
+    fmt.Println(res["form"])
+	}
+}
+
+func token() string {
+	// TODO: ENV variable
 }
 
 func main() {
