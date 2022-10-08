@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/google/go-github/v47 v47.1.0
+	github.com/joho/godotenv v1.4.0
 	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1
 )
 

@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/v47/github"
+	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 )
 
@@ -18,7 +20,13 @@ func getInput(prompt string, r *bufio.Reader) (string, error) {
 	return strings.TrimSpace(input), err
 }
 
-func getInfo() {
+type info struct {
+	org        string
+	title      string
+	visibility string
+}
+
+func getInfo() *info {
 	reader := bufio.NewReader(os.Stdin)
 
 	org, _ := getInput("Organization (leave empty to use default): ", reader)
@@ -29,7 +37,13 @@ func getInfo() {
 		title = getProjectName()
 	}
 
-	initRepo(title, org, visibility)
+	i := info{
+		title:      title,
+		org:        org,
+		visibility: visibility,
+	}
+
+	return &i
 }
 
 func getProjectName() string {
@@ -47,32 +61,43 @@ func initRepo(title string, org string, visibility string) {
 	fmt.Println("Authenticating...")
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: "... your access token ..."},
+		&oauth2.Token{AccessToken: token()},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-
 	client := github.NewClient(tc)
 
-	// list all repositories for the authenticated user
-	repos, _, err := client.Repositories.List(ctx, "", nil)
-	fmt.Println(repos, err)
-
 	fmt.Println("creating repository...")
+	repo := &github.Repository{
+		Name:         github.String(title),
+		Private:      github.Bool(visibility == "private"),
+		Organization: &github.Organization{Name: github.String(org)},
+	}
+	client.Repositories.Create(ctx, "", repo)
+	time.Sleep(5 * time.Second)
 
-	// repo := &github.Repository{
-	// 	Name:    github.String(title),
-	// 	Private: github.Bool(visibility == "private"),
-	// 	// Org:	 github.String(org)
-	// }
-	// client.Repositories.Create(ctx, "", repo)
+	fmt.Println("Successfully initialized Repository")
 }
 
-// func token() string {
-// 	// TODO: ENV variable
-// }
+func token() string {
+	error := godotenv.Load(".env")
+	if error != nil {
+		fmt.Println("Could not load .env file")
+		os.Exit(1)
+	}
+
+	token := os.Getenv("GH_TOKEN")
+
+	if len(token) <= 0 {
+		fmt.Println("Please insert your GitHub Token into the prepared .env file.")
+		os.Exit(1)
+	}
+
+	return token
+}
 
 func main() {
 	fmt.Println("GitHub Automation")
 	fmt.Println("-----------------")
-	getInfo()
+	info := getInfo()
+	initRepo(info.title, info.org, info.visibility)
 }
