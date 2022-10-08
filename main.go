@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/google/go-github/v47/github"
 	"github.com/joho/godotenv"
@@ -68,12 +67,10 @@ func initRepo(title string, org string, visibility string) {
 
 	fmt.Println("creating repository...")
 	repo := &github.Repository{
-		Name:         github.String(title),
-		Private:      github.Bool(visibility == "private"),
-		Organization: &github.Organization{Name: github.String(org)},
+		Name:    github.String(title),
+		Private: github.Bool(visibility == "private"),
 	}
-	client.Repositories.Create(ctx, "", repo)
-	time.Sleep(5 * time.Second)
+	client.Repositories.Create(ctx, org, repo)
 
 	fmt.Println("Successfully initialized Repository")
 }
