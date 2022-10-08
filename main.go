@@ -2,11 +2,13 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
-	"http"
-	"net/http"
 	"os"
 	"strings"
+
+	"github.com/google/go-github/v47/github"
+	"golang.org/x/oauth2"
 )
 
 func getInput(prompt string, r *bufio.Reader) (string, error) {
@@ -42,42 +44,32 @@ func getProjectName() string {
 }
 
 func initRepo(title string, org string, visibility string) {
-	fmt.Println("initRepo:", title, org, visibility)
+	fmt.Println("Authenticating...")
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: "... your access token ..."},
+	)
+	tc := oauth2.NewClient(ctx, ts)
 
-	if visibility == "private" {
-		payload := fmt.Sprintf("\"name\": \"Test\", \"private\": \"true\"")
-		fmt.Println(payload)
-    	// payload := '{"name": "' + title + '", "private": "true"}'
-	} else {
-		// payload := '{"name": "' + name + '", "private": "false"}'
-	}
+	client := github.NewClient(tc)
+
+	// list all repositories for the authenticated user
+	repos, _, err := client.Repositories.List(ctx, "", nil)
+	fmt.Println(repos, err)
 
 	fmt.Println("creating repository...")
 
-	API_URL := "https://api.github.com"
-	headers := {
-		"Authorization": "token " + token(),
-		"Accept": "application/vnd.github.v3+json",
-	}
-
-	if org == "" {
-		res, err := http.PostForm(API_URL + "/user/repos", data=payload, headers=headers)
-
-		if err != nil {
-			panic(err)
-		}
-
-		var res map[string]interface{}
-
-    json.NewDecoder(resp.Body).Decode(&res)
-
-    fmt.Println(res["form"])
-	}
+	// repo := &github.Repository{
+	// 	Name:    github.String(title),
+	// 	Private: github.Bool(visibility == "private"),
+	// 	// Org:	 github.String(org)
+	// }
+	// client.Repositories.Create(ctx, "", repo)
 }
 
-func token() string {
-	// TODO: ENV variable
-}
+// func token() string {
+// 	// TODO: ENV variable
+// }
 
 func main() {
 	fmt.Println("GitHub Automation")
