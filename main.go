@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -19,6 +20,34 @@ func getInput(prompt string, r *bufio.Reader) (string, error) {
 	return strings.TrimSpace(input), err
 }
 
+func directory(r *bufio.Reader) {
+	dir, _ := getInput("Enter path to Directory (leave empty for current directory): ", r)
+
+	fmt.Println("Files in directory:")
+	fmt.Println("-------------------")
+
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name(), file.IsDir())
+	}
+
+	decision, _ := getInput("\nDid you select the right directory? (Yes, No): ", r)
+
+	if decision != "Yes" {
+		directory(r)
+	}
+
+	err = os.Chdir(dir)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 type info struct {
 	org        string
 	title      string
@@ -27,6 +56,8 @@ type info struct {
 
 func getInfo() *info {
 	reader := bufio.NewReader(os.Stdin)
+
+	directory(reader)
 
 	org, _ := getInput("Organization (leave empty to use default): ", reader)
 	title, _ := getInput("Repo title (leave empty to use project folder name): ", reader)
