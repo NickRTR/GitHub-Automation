@@ -1,20 +1,67 @@
 package main
 
 import (
+	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/google/go-github/v47/github"
+	"golang.org/x/oauth2"
 )
 
 func getDirectoryName() string {
 	workingDirectory, err := os.Getwd()
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	return filepath.Base(workingDirectory)
+}
+
+func token() string {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter your GitHub personal access token: ")
+	input, err := reader.ReadString('\n')
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Remove spaces
+	return strings.TrimSpace(input)
+}
+
+func authenticate() (*github.Client, context.Context) {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token()},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	return github.NewClient(tc), ctx
+}
+
+func createRepo(client *github.Client, ctx context.Context) {
+	fmt.Println("Creating repository...")
+	repo := &github.Repository{
+		Name:    github.String(title),
+		Private: github.Bool(private),
+	}
+	_, _, err := client.Repositories.Create(ctx, organization, repo)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Successfully initialized Repository!")
 }
 
 // flags
@@ -47,7 +94,8 @@ func init() {
 }
 
 func main() {
-	fmt.Println(title)
-	fmt.Println(organization)
-	fmt.Println(private)
+	fmt.Println("GitHub-Automation")
+	fmt.Println("--------------------------")
+
+	createRepo(authenticate())
 }
