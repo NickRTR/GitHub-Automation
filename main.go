@@ -95,7 +95,7 @@ func init() {
 
 func main() {
 	fmt.Println("GitHub-Automation")
-	fmt.Println("--------------------------")
+	fmt.Println("--------------------------------------")
 
 	createRepo(authenticate())
 }
