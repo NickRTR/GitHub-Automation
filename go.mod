@@ -1,4 +1,4 @@
-module github.com/NickRTR/Go-GitHub-Automation
+module github.com/NickRTR/GitHub-Automation
 
 go 1.18
 
