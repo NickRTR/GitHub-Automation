@@ -5,7 +5,7 @@
 (Recent installation of Go(lang) required)
 
 ```
-go install https://github.com/NickRTR/Go-GitHub-Automation@latest
+go install github.com/NickRTR/GitHub-Automation@latest
 ```
 
 ## Usage
