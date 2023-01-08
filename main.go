@@ -3,129 +3,99 @@ package main
 import (
 	"bufio"
 	"context"
+	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/google/go-github/v47/github"
-	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 )
 
-func getInput(prompt string, r *bufio.Reader) (string, error) {
-	fmt.Print(prompt)
-	input, err := r.ReadString('\n')
-
-	return strings.TrimSpace(input), err
-}
-
-func directory(r *bufio.Reader) {
-	dir, _ := getInput("Enter path to Directory (leave empty for current directory): ", r)
-
-	fmt.Println("Files in directory:")
-	fmt.Println("-------------------")
-
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, file := range files {
-		fmt.Println(file.Name(), file.IsDir())
-	}
-
-	decision, _ := getInput("\nDid you select the right directory? (Yes, No): ", r)
-
-	if decision != "Yes" {
-		directory(r)
-	}
-
-	err = os.Chdir(dir)
-
-	if err != nil {
-		panic(err)
-	}
-}
-
-type info struct {
-	org        string
-	title      string
-	visibility string
-}
-
-func getInfo() *info {
-	reader := bufio.NewReader(os.Stdin)
-
-	directory(reader)
-
-	org, _ := getInput("Organization (leave empty to use default): ", reader)
-	title, _ := getInput("Repo title (leave empty to use project folder name): ", reader)
-	visibility, _ := getInput("Visibility [private / public] (default value is public): ", reader)
-
-	if len(title) == 0 {
-		title = getProjectName()
-	}
-
-	i := info{
-		title:      title,
-		org:        org,
-		visibility: visibility,
-	}
-
-	return &i
-}
-
-func getProjectName() string {
+func getDirectoryName() string {
 	workingDirectory, err := os.Getwd()
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	folders := strings.Split(workingDirectory, "\\")
-	return folders[len(folders)-1]
+	return filepath.Base(workingDirectory)
 }
 
-func initRepo(title string, org string, visibility string) {
-	fmt.Println("Authenticating...")
+func token() string {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter your GitHub personal access token: ")
+	input, err := reader.ReadString('\n')
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Remove spaces
+	return strings.TrimSpace(input)
+}
+
+func authenticate() (*github.Client, context.Context) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token()},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-
-	fmt.Println("creating repository...")
-	repo := &github.Repository{
-		Name:    github.String(title),
-		Private: github.Bool(visibility == "private"),
-	}
-	client.Repositories.Create(ctx, org, repo)
-
-	fmt.Println("Successfully initialized Repository")
+	return github.NewClient(tc), ctx
 }
 
-func token() string {
-	error := godotenv.Load(".env")
-	if error != nil {
-		fmt.Println("Could not load .env file")
+func createRepo(client *github.Client, ctx context.Context) {
+	fmt.Println("Creating repository...")
+	repo := &github.Repository{
+		Name:    github.String(title),
+		Private: github.Bool(private),
+	}
+	_, _, err := client.Repositories.Create(ctx, organization, repo)
+
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	token := os.Getenv("GH_TOKEN")
+	fmt.Println("Successfully initialized Repository!")
+}
 
-	if len(token) <= 0 {
-		fmt.Println("Please insert your GitHub Token into the prepared .env file.")
-		os.Exit(1)
-	}
+// flags
+var title string
+var organization string
+var private bool
 
-	return token
+func init() {
+	var (
+		defaultTitle     = getDirectoryName()
+		titleDescription = "Change the repository title, the default is your current directory"
+	)
+	flag.StringVar(&title, "title", defaultTitle, titleDescription)
+	flag.StringVar(&title, "t", title, titleDescription+" (shorthand)")
+
+	var (
+		defaultOrganization     = ""
+		organizationDescription = "Change the organization of the repository (must be existent and accessible through your token)"
+	)
+	flag.StringVar(&organization, "organization", defaultOrganization, organizationDescription)
+	flag.StringVar(&organization, "o", defaultOrganization, organizationDescription+" (shorthand)")
+
+	const (
+		privateDescription = "set the visibility of the repository to private"
+	)
+	flag.BoolVar(&private, "private", false, privateDescription)
+	flag.BoolVar(&private, "p", false, privateDescription+" (shorthand)")
+
+	flag.Parse()
 }
 
 func main() {
-	fmt.Println("GitHub Automation")
-	fmt.Println("-----------------")
-	info := getInfo()
-	initRepo(info.title, info.org, info.visibility)
+	fmt.Println("GitHub-Automation")
+	fmt.Println("--------------------------------------")
+
+	createRepo(authenticate())
 }
