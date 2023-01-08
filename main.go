@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -48,20 +49,62 @@ func authenticate() (*github.Client, context.Context) {
 	return github.NewClient(tc), ctx
 }
 
-func createRepo(client *github.Client, ctx context.Context) {
-	fmt.Println("Creating repository...")
+func createRepo(client *github.Client, ctx context.Context) string {
+	fmt.Println("Creating Repository...")
 	repo := &github.Repository{
 		Name:    github.String(title),
 		Private: github.Bool(private),
 	}
-	_, _, err := client.Repositories.Create(ctx, organization, repo)
+	res, _, err := client.Repositories.Create(ctx, organization, repo)
 
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Successfully initialized Repository!")
+	fmt.Println("Successfully created Repository!")
+
+	return *res.CloneURL
+}
+
+func execute(command string) {
+	cmd := exec.Command("bash", "-c", command)
+
+	_, err := cmd.Output()
+	if err != nil {
+		fmt.Println("Could not run command: ", err)
+	}
+}
+
+func createREADME() {
+	fmt.Println("Create README")
+
+	err := os.WriteFile("README.md", []byte("# "+title), os.ModeAppend)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Successfully created README")
+}
+
+func initRepo(url string) {
+	fmt.Println("Initializing Repository...")
+
+	// Check for README
+	_, err := os.Stat("README.md")
+	if err != nil && os.IsNotExist(err) {
+		createREADME()
+	}
+
+	execute("git init")
+	execute("git add .")
+	execute("git commit -m \"initial commit\"")
+	execute("git branch -M main")
+	execute("git remote add origin " + url)
+	execute("git push -u origin main")
+
+	fmt.Println("Successfully Initialized Repository.")
 }
 
 // flags
@@ -97,5 +140,7 @@ func main() {
 	fmt.Println("GitHub-Automation")
 	fmt.Println("--------------------------------------")
 
-	createRepo(authenticate())
+	repoURL := createRepo(authenticate())
+
+	initRepo(repoURL)
 }
