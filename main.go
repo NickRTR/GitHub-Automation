@@ -143,4 +143,6 @@ func main() {
 	repoURL := createRepo(authenticate())
 
 	initRepo(repoURL)
+
+	fmt.Printf("\nVisit the initialized Repository at %s\n", repoURL)
 }
