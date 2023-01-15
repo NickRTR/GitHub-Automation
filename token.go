@@ -73,3 +73,11 @@ func StoreToken(token string) {
 	file.Write(bytes)
 	file.Close()
 }
+
+func reset() {
+	fmt.Println("Resetting stored token...")
+	err := os.Remove(path())
+	if err != nil {
+		fmt.Printf("An error ocurred while resetting the stored token: %s\n", err)
+	}
+}

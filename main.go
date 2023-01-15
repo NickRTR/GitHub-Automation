@@ -94,6 +94,7 @@ func initRepo(url string) {
 var title string
 var organization string
 var private bool
+var resetToken bool
 
 func init() {
 	var (
@@ -116,10 +117,20 @@ func init() {
 	flag.BoolVar(&private, "private", false, privateDescription)
 	flag.BoolVar(&private, "p", false, privateDescription+" (shorthand)")
 
+	const (
+		tokenDescription = "Reset the saved GitHub Access Token"
+	)
+	flag.BoolVar(&resetToken, "reset", false, tokenDescription)
+	flag.BoolVar(&resetToken, "r", false, tokenDescription)
+
 	flag.Parse()
 }
 
 func main() {
+	if resetToken {
+		reset()
+	}
+
 	fmt.Println("GitHub-Automation")
 	fmt.Println("--------------------------------------")
 
