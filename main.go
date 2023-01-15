@@ -1,14 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/google/go-github/v47/github"
 	"golang.org/x/oauth2"
@@ -25,25 +23,10 @@ func getDirectoryName() string {
 	return filepath.Base(workingDirectory)
 }
 
-func token() string {
-	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Print("Enter your GitHub personal access token: ")
-	input, err := reader.ReadString('\n')
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	// Remove spaces
-	return strings.TrimSpace(input)
-}
-
 func authenticate() (*github.Client, context.Context) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token()},
+		&oauth2.Token{AccessToken: GetToken()},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	return github.NewClient(tc), ctx
@@ -141,8 +124,7 @@ func main() {
 	fmt.Println("--------------------------------------")
 
 	repoURL := createRepo(authenticate())
-
 	initRepo(repoURL)
 
-	fmt.Printf("\nVisit the initialized Repository at %s\n", repoURL)
+	fmt.Printf("\nVisit the Repository at %s\n", repoURL)
 }
