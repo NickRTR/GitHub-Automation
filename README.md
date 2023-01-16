@@ -1,4 +1,4 @@
-# Go-GitHub-Automation
+# GitHub-Automation
 
 ## Installation
 
