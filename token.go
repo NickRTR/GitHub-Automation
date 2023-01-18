@@ -21,10 +21,10 @@ func GetToken() string {
 	// Prompt Token
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Print("Enter your GitHub personal access token: ")
+	brint("Enter your GitHub personal access token: ")
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Println(err)
+		brintErr(err.Error())
 		os.Exit(1)
 	}
 	// Remove spaces
@@ -36,7 +36,7 @@ func GetToken() string {
 }
 
 func path() string {
-	return fmt.Sprintf("%s/bin/GitHub-Automation.json", os.Getenv("GOPATH"))
+	return fmt.Sprintf("%s/bin/GitHub-Automation.json", os.Getenv("GOROOT"))
 }
 
 func GetTokenFromConfiguration() string {
@@ -49,7 +49,7 @@ func GetTokenFromConfiguration() string {
 	jsonParser := json.NewDecoder(configFile)
 	err = jsonParser.Decode(&config)
 	if err != nil {
-		fmt.Printf("An error ocurred while retrieving the token from configuration: %s\n", err)
+		brintErr(fmt.Sprintf("An error ocurred while retrieving the token from configuration: %s\n", err))
 		return ""
 	}
 
@@ -63,21 +63,21 @@ func StoreToken(token string) {
 
 	bytes, err := json.Marshal(config)
 	if err != nil {
-		fmt.Printf("An error ocurred while writing the token to configuration: %s\n", err)
+		brintErr(fmt.Sprintf("An error ocurred while writing the token to configuration: %s\n", err))
 	}
 
 	file, err := os.Create(path())
 	if err != nil {
-		fmt.Printf("An error ocurred while writing the token to configuration: %s\n", err)
+		brintErr(fmt.Sprintf("An error ocurred while writing the token to configuration: %s\n", err))
 	}
 	file.Write(bytes)
 	file.Close()
 }
 
 func reset() {
-	fmt.Println("Resetting stored token...")
+	brint("Resetting stored token...")
 	err := os.Remove(path())
 	if err != nil {
-		fmt.Printf("An error ocurred while resetting the stored token: %s\n", err)
+		brintErr(fmt.Sprintf("An error ocurred while resetting the stored token: %s\n", err))
 	}
 }

@@ -16,7 +16,7 @@ func getDirectoryName() string {
 	workingDirectory, err := os.Getwd()
 
 	if err != nil {
-		fmt.Println(err)
+		brintErr(err.Error())
 		os.Exit(1)
 	}
 
@@ -33,7 +33,7 @@ func authenticate() (*github.Client, context.Context) {
 }
 
 func createRepo(client *github.Client, ctx context.Context) string {
-	fmt.Println("Creating Repository...")
+	brint("Creating Repository...")
 	repo := &github.Repository{
 		Name:    github.String(title),
 		Private: github.Bool(private),
@@ -41,38 +41,40 @@ func createRepo(client *github.Client, ctx context.Context) string {
 	res, _, err := client.Repositories.Create(ctx, organization, repo)
 
 	if err != nil {
-		fmt.Println(err)
+		brintErr(err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Println("Successfully created Repository!")
+	brint("Successfully created Repository!")
 
 	return *res.CloneURL
 }
 
-func execute(command string) {
+func execute(command string) error {
 	cmd := exec.Command("bash", "-c", command)
 
 	_, err := cmd.Output()
 	if err != nil {
-		fmt.Println("Could not run command: ", err)
+		brintErr(fmt.Sprintf("Could not run command (%s) %s", command, err.Error()))
 	}
+
+	return err
 }
 
 func createREADME() {
-	fmt.Println("Create README")
+	brint("Create README")
 
 	err := os.WriteFile("README.md", []byte("# "+title), os.ModeAppend)
 	if err != nil {
-		fmt.Println(err)
+		brintErr(err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Println("Successfully created README")
+	brint("Successfully created README")
 }
 
 func initRepo(url string) {
-	fmt.Println("Initializing Repository...")
+	brint("Initializing Repository...")
 
 	// Check for README
 	_, err := os.Stat("README.md")
@@ -80,14 +82,18 @@ func initRepo(url string) {
 		createREADME()
 	}
 
-	execute("git init")
-	execute("git add .")
-	execute("git commit -m \"initial commit\"")
-	execute("git branch -M main")
-	execute("git remote add origin " + url)
-	execute("git push -u origin main")
+	commands := []string{"git init", "git add .", "git commit -m \"initial commit\"", "git branch -M main", "git remote add origin " + url, "git push -u origin main"}
 
-	fmt.Println("Successfully Initialized Repository.")
+	for _, c := range commands {
+		err := execute(c)
+		if err != nil {
+			brintErr("Failed initializing Repository")
+			return
+		}
+	}
+
+	brint("Successfully initialized Repository.")
+
 }
 
 // flags
@@ -131,11 +137,8 @@ func main() {
 		reset()
 	}
 
-	fmt.Println("GitHub-Automation")
-	fmt.Println("--------------------------------------")
-
 	repoURL := createRepo(authenticate())
 	initRepo(repoURL)
 
-	fmt.Printf("\nVisit the Repository at %s\n", repoURL)
+	fmt.Printf("🟡 Visit the Repository at %s\n", repoURL)
 }
