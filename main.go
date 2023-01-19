@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/go-github/v47/github"
 	"golang.org/x/oauth2"
@@ -51,7 +52,11 @@ func createRepo(client *github.Client, ctx context.Context) string {
 }
 
 func execute(command string) error {
-	cmd := exec.Command("bash", "-c", command)
+	splitted := strings.Split(command, "#")
+	name := splitted[0]
+	splitted = splitted[1:]
+
+	cmd := exec.Command(name, splitted...)
 
 	_, err := cmd.Output()
 	if err != nil {
@@ -82,7 +87,7 @@ func initRepo(url string) {
 		createREADME()
 	}
 
-	commands := []string{"git init", "git add .", "git commit -m \"initial commit\"", "git branch -M main", "git remote add origin " + url, "git push -u origin main"}
+	commands := []string{"git#init", "git#add#.", "git#commit#-m#'initial commit'", "git#branch#-M#main", "git#remote#add#origin#" + url, "git#push#-u#origin#main"}
 
 	for _, c := range commands {
 		err := execute(c)
