@@ -87,7 +87,7 @@ func initRepo(url string) {
 		createREADME()
 	}
 
-	commands := []string{"git#init", "git#add#.", "git#commit#-m#'initial commit'", "git#branch#-M#main", "git#remote#add#origin#" + url, "git#push#-u#origin#main"}
+	commands := []string{"git#init", "git#add#.", "git#commit#-m#initial commit", "git#branch#-M#main", "git#remote#add#origin#" + url, "git#push#-u#origin#main"}
 
 	for _, c := range commands {
 		err := execute(c)
