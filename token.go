@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var path string = ".gh-automation-config.json"
+
 type Configuration struct {
 	GitHub_Token string
 }
@@ -35,13 +37,9 @@ func GetToken() string {
 	return t
 }
 
-func path() string {
-	return fmt.Sprintf("%s/bin/GitHub-Automation.json", os.Getenv("GOROOT"))
-}
-
 func GetTokenFromConfiguration() string {
 	var config Configuration
-	configFile, err := os.Open(path())
+	configFile, err := os.Open(path)
 	if err != nil {
 		return ""
 	}
@@ -66,7 +64,7 @@ func StoreToken(token string) {
 		brintErr(fmt.Sprintf("An error ocurred while writing the token to configuration: %s\n", err))
 	}
 
-	file, err := os.Create(path())
+	file, err := os.Create(path)
 	if err != nil {
 		brintErr(fmt.Sprintf("An error ocurred while writing the token to configuration: %s\n", err))
 	}
@@ -76,7 +74,7 @@ func StoreToken(token string) {
 
 func reset() {
 	brint("Resetting stored token...")
-	err := os.Remove(path())
+	err := os.Remove(path)
 	if err != nil {
 		brintErr(fmt.Sprintf("An error ocurred while resetting the stored token: %s\n", err))
 	}
