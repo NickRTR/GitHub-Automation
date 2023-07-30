@@ -8,6 +8,14 @@
 go install github.com/NickRTR/GitHub-Automation@latest
 ```
 
+**On macOS:**
+
+```
+sudo ln -s <Path to Executable> /usr/local/bin
+```
+
+(Path to executable should be similar to the following path: `Users/name/go/bin/GitHub-Automation`)
+
 ## Usage
 
 1. Create a GitHub access token with repo access
