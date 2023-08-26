@@ -5,13 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
-var path string = ".gh-automation-config.json"
+var path string = getPath()
 
 type Configuration struct {
 	GitHub_Token string
+}
+
+func getPath() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		brintErr(fmt.Sprintf("An error ocurred while reading the user directory: %s\n", err))
+	}
+	return filepath.FromSlash(homeDir + "/.gh-automation-config.json")
 }
 
 func GetToken() string {
