@@ -34,10 +34,20 @@ func authenticate() (*github.Client, context.Context) {
 	return github.NewClient(tc), ctx
 }
 
+func formatUmlauts(text string) string {
+	// Replace ä with ae, ö with oe, ü with ue, ß with ss
+	text = strings.ReplaceAll(text, "ä", "ae")
+	text = strings.ReplaceAll(text, "ö", "oe")
+	text = strings.ReplaceAll(text, "ü", "ue")
+	text = strings.ReplaceAll(text, "ß", "ss")
+
+	return text
+}
+
 func createRepo(client *github.Client, ctx context.Context) string {
 	brint("Creating Repository...")
 	repo := &github.Repository{
-		Name:    github.String(title),
+		Name:    github.String(formatUmlauts(title)),
 		Private: github.Bool(private),
 	}
 	res, _, err := client.Repositories.Create(ctx, organization, repo)
