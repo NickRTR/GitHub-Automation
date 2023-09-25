@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/google/go-github/v47/github"
 	"golang.org/x/oauth2"
@@ -70,6 +71,13 @@ func createREADME() {
 	brint("Create README")
 
 	err := os.WriteFile("README.md", []byte("# "+title), os.ModeAppend)
+	if err != nil {
+		brintErr(err.Error())
+		os.Exit(1)
+	}
+
+	// Set file mode explicitly to 0644
+	err = syscall.Chmod("README.md", 0644)
 	if err != nil {
 		brintErr(err.Error())
 		os.Exit(1)
